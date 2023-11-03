@@ -2,4 +2,4 @@
 
 Team Name: Team 13.5
 
-Members: Jett Kasch, Catherine Calvano, Jay Scott
+Members: Jett Kasch, Catherine Calvano, Harrison Abrams
