@@ -6,7 +6,9 @@ Source Code to Run Tool on All Kubernetes Manifests
 import scanner 
 import pandas as pd 
 import constants
-# I think this is the final simple test for git hook implementation
+
+# Simple change for testing git hook implementation
+
 def getCountFromAnalysis(ls_):
     list2ret           = []
     for tup_ in ls_:
