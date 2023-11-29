@@ -14,6 +14,10 @@ import pathlib as pl
 import re
 import subprocess
 import os
+import logging  # Forensics - Import the logging module
+
+logging.basicConfig(filename='forensics_log.txt', level=logging.INFO)  # Configure logging
+
 
 #update basepath
 base_path = r" "
@@ -25,10 +29,16 @@ def checkIfWeirdYAML(yaml_script):
     '''
     to filter invalid YAMLs such as ./github/workflows/ 
     '''
-    val = False
-    if ( any(x_ in yaml_script for x_ in constants.WEIRD_PATHS  ) ):
-        val = True 
-    return val 
+    # Implemented forensics - Logging
+    try: 
+        val = False
+        if ( any(x_ in yaml_script for x_ in constants.WEIRD_PATHS  ) ):
+            val = True 
+        logging.info(f"YAML check for weird paths: {val}")
+        return val 
+    except Exception as e:
+        logging.error(f"Error in checkIfWeirdYAML: {str(e)}")
+        
 
 
 def keyMiner(dic_, value):
@@ -128,9 +138,16 @@ def getValsFromKey(dict_, target, list_holder  ):
 
 def checkIfValidHelm(path_script):
     val_ret = False 
-    if ( (constants.HELM_KW in path_script) or (constants.CHART_KW in path_script) or (constants.SERVICE_KW in path_script) or (constants.INGRESS_KW in path_script)  or(constants.HELM_DEPLOY_KW in path_script) or (constants.CONFIG_KW in path_script) )  and (constants.VALUE_KW in path_script) :
-        val_ret = True 
-    return val_ret
+    # Implemented forensics - Logging
+    try:
+        if (constants.HELM_KW in path_script) or (constants.CHART_KW in path_script) or (constants.SERVICE_KW in path_script) or (constants.INGRESS_KW in path_script) or(constants.HELM_DEPLOY_KW in path_script) or (constants.CONFIG_KW in path_script) and (constants.VALUE_KW in path_script):
+            val_ret = True 
+        logging.info(f"Check for valid Helm script: {val_ret}")
+        return val_ret 
+    
+    except Exception as e:
+        logging.error(f"Error in checkIfValidHelm: {str(e)}")
+        
 
 def readYAMLAsStr( path_script ):
     yaml_as_str = constants.YAML_SKIPPING_TEXT
@@ -159,43 +176,53 @@ def checkParseError( path_script ):
 
 def loadMultiYAML( script_ ):
     dicts2ret = []  
-    with open(script_, constants.FILE_READ_FLAG  ) as yml_content :
-        yaml = ruamel.yaml.YAML()
-        yaml.default_flow_style = False      
-        try:
-            for d_ in yaml.load_all(yml_content) :                
+    # Implemented Forensics - Logging
+    try:
+        with open(script_, constants.FILE_READ_FLAG) as yml_content:
+            yaml = ruamel.yaml.YAML()
+            yaml.default_flow_style = False
+            for d_ in yaml.load_all(yml_content):
                 # print('='*25)
                 # print(d_)
-                dicts2ret.append( d_ )
-        except ruamel.yaml.parser.ParserError as parse_error:
-            print(constants.YAML_SKIPPING_TEXT)           
-        except ruamel.yaml.error.YAMLError as exc:
-            print( constants.YAML_SKIPPING_TEXT  )    
-        except UnicodeDecodeError as err_: 
-            print( constants.YAML_SKIPPING_TEXT  )
+                dicts2ret.append(d_)
+        logging.info(f"Successfully loaded YAML from {script_}")
+    except ruamel.yaml.parser.ParserError as parse_error:
+        logging.error(f"ParserError while loading YAML from {script_}: {parse_error}")
+        print(constants.YAML_SKIPPING_TEXT)   
         
-        path = find_json_path_keys(dicts2ret)
-        #print(dicts2ret)
-        no_exception = checkParseError(script_)
-        if no_exception:
-            # for debugging purposes
 
-            path = find_json_path_keys(dicts2ret) #, key_jsonpath_mapping
-            # print(path)
-            updated_path = update_json_paths(path)
-            # print(updated_path)
-            # print("-------------------HERE IS THE MAPPING---------------")
-            # for key in key_jsonpath_mapping:
-            #     print(key, "-->", key_jsonpath_mapping[key],  "-->", print(type(key_jsonpath_mapping[key])) )
-            # print("----LINE----")
-            # line = show_line_for_paths(script_, 'serviceName') #imagePullSecrets
-            # print(line)
-            # print("----JSON Validated----")
-            # print(type(dicts2ret))
-            # for d in dicts2ret:
-            #     print(type(d))
-                
-        #print(dicts2ret)
+    except ruamel.yaml.error.YAMLError as exc:
+        logging.error(f"YAMLError while loading YAML from {script_}: {exc}")
+        print(constants.YAML_SKIPPING_TEXT)
+        
+    
+    except UnicodeDecodeError as err_:
+        logging.error(f"UnicodeDecodeError while loading YAML from {script_}: {err_}")
+        print(constants.YAML_SKIPPING_TEXT)
+        
+        
+    path = find_json_path_keys(dicts2ret)
+    #print(dicts2ret)
+    no_exception = checkParseError(script_)
+    if no_exception:
+        # for debugging purposes
+
+        path = find_json_path_keys(dicts2ret) #, key_jsonpath_mapping
+        # print(path)
+        updated_path = update_json_paths(path)
+        # print(updated_path)
+        # print("-------------------HERE IS THE MAPPING---------------")
+        # for key in key_jsonpath_mapping:
+        #     print(key, "-->", key_jsonpath_mapping[key],  "-->", print(type(key_jsonpath_mapping[key])) )
+        # print("----LINE----")
+        # line = show_line_for_paths(script_, 'serviceName') #imagePullSecrets
+        # print(line)
+        # print("----JSON Validated----")
+        # print(type(dicts2ret))
+        # for d in dicts2ret:
+        #     print(type(d))
+            
+    #print(dicts2ret)
     return dicts2ret
 
 
